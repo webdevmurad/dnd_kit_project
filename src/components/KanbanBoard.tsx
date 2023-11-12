@@ -1,6 +1,25 @@
 import PlusIcon from "../icons/PlusIcon"
+import { useState } from "react"
+import {Column, Id} from "../types.ts";
+import ColumnContainer from "./ColumnContainer.tsx";
 
 function KanbanBoard() {
+  const [columns, setColumns] = useState<Column[]>([])
+
+  function createNewColumn() {
+    const columnToAdd: Column = {
+      id: generateId(),
+      title: `Column ${columns.length + 1}`,
+    }
+
+    setColumns([...columns, columnToAdd])
+  }
+
+  function deleteColumn(id: Id) {
+    const filteredColumns = columns.filter(col => col.id !== id)
+    setColumns(filteredColumns)
+  }
+
   return (
     <div
       className="
@@ -14,8 +33,22 @@ function KanbanBoard() {
         px-[40px]
       "
     >
-      <div className="m-auto">
+      <div className="m-auto flex gap-4">
+        <div className="flex gap-4">
+          {
+            columns.map((col) => (
+              <ColumnContainer
+                key={col.id}
+                column={col}
+                deleteColumn={deleteColumn}
+              />
+            ))
+          }
+        </div>
         <button
+          onClick={() => {
+            createNewColumn()
+          }}
           className="
             h-[60px]
             w-[350px]
@@ -38,6 +71,10 @@ function KanbanBoard() {
       </div>
     </div>
   )
+}
+
+function generateId() {
+  return Math.floor(Math.random() * 10001)
 }
 
 export default KanbanBoard
