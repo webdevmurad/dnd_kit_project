@@ -113,10 +113,10 @@ function ColumnContainer(props: Props) {
             stroke-gray-500
             hover:stroke-white
             hover:bg-columnBackgroundColor
-            rounded
             px-1
             text-sm
-            rounded-full"
+            rounded
+            "
           >
             <TrashIcon />
           </button>
