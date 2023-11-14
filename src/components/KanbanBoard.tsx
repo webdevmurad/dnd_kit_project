@@ -56,6 +56,15 @@ function KanbanBoard() {
     setColumns(newColumns)
   }
 
+  function updateTask(id: Id, content: string) {
+    const newTasks = tasks.map((task) => {
+      if (task.id !== id) return task
+      return { ...task, content }
+    })
+
+    setTasks(newTasks)
+  }
+
   function deleteColumn(id: Id) {
     const filteredColumns = columns.filter(col => col.id !== id)
     setColumns(filteredColumns)
@@ -119,9 +128,10 @@ function KanbanBoard() {
                   <ColumnContainer
                     key={col.id}
                     column={col}
-                    createTask={createTask}
                     updateColumn={updateColumn}
                     deleteColumn={deleteColumn}
+                    updateTask={updateTask}
+                    createTask={createTask}
                     deleteTask={deleteTask}
                     tasks={tasks.filter((task) => task.columnId === col.id)}
                   />
@@ -161,9 +171,10 @@ function KanbanBoard() {
                 activeColumn && (
                   <ColumnContainer
                     column={activeColumn}
-                    createTask={createTask}
                     updateColumn={updateColumn}
                     deleteColumn={deleteColumn}
+                    createTask={createTask}
+                    updateTask={updateTask}
                     deleteTask={deleteTask}
                     tasks={tasks.filter((task) => task.columnId === activeColumn.id)}
                   />
