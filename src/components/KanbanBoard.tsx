@@ -1,6 +1,6 @@
 import PlusIcon from "../icons/PlusIcon"
 import {useMemo, useState} from "react"
-import {Column, Id} from "../types.ts"
+import {Column, Id, Task} from "../types.ts"
 import ColumnContainer from "./ColumnContainer.tsx"
 import {
   DndContext,
@@ -17,6 +17,8 @@ import {createPortal} from "react-dom";
 function KanbanBoard() {
   const [columns, setColumns] = useState<Column[]>([])
   const [ activeColumn, setActiveColumn ] = useState<Column | null>(null)
+  const [ tasks, setTasks ] = useState<Task[]>([])
+
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns])
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -35,9 +37,14 @@ function KanbanBoard() {
     setColumns([...columns, columnToAdd])
   }
 
-  function deleteColumn(id: Id) {
-    const filteredColumns = columns.filter(col => col.id !== id)
-    setColumns(filteredColumns)
+  function createTask(columnId: Id) {
+    const newTask: Task = {
+      id: generateId(),
+      columnId,
+      content: `Task ${tasks.length + 1}`
+    }
+
+    setTasks([...tasks, newTask])
   }
 
   function updateColumn(id: Id, title: string) {
@@ -47,6 +54,11 @@ function KanbanBoard() {
     })
 
     setColumns(newColumns)
+  }
+
+  function deleteColumn(id: Id) {
+    const filteredColumns = columns.filter(col => col.id !== id)
+    setColumns(filteredColumns)
   }
 
   function onDragStart (event: DragStartEvent) {
@@ -101,8 +113,10 @@ function KanbanBoard() {
                   <ColumnContainer
                     key={col.id}
                     column={col}
-                    deleteColumn={deleteColumn}
+                    createTask={createTask}
                     updateColumn={updateColumn}
+                    deleteColumn={deleteColumn}
+                    tasks={tasks.filter((task) => task.columnId === col.id)}
                   />
                 ))
               }
@@ -140,8 +154,9 @@ function KanbanBoard() {
                 activeColumn && (
                   <ColumnContainer
                     column={activeColumn}
-                    deleteColumn={deleteColumn}
+                    createTask={createTask}
                     updateColumn={updateColumn}
+                    deleteColumn={deleteColumn}
                   />
                 )
               }
