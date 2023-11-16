@@ -9,14 +9,16 @@ import {
   DragStartEvent,
   PointerSensor,
   useSensors,
-  useSensor
+  useSensor, DragOverEvent
 } from "@dnd-kit/core"
 import {arrayMove, SortableContext} from "@dnd-kit/sortable"
 import {createPortal} from "react-dom";
+import TaskCard from "./TaskCard.tsx";
 
 function KanbanBoard() {
   const [columns, setColumns] = useState<Column[]>([])
   const [ activeColumn, setActiveColumn ] = useState<Column | null>(null)
+  const [ activeTask, setActiveTask ] = useState<Task | null>(null)
   const [ tasks, setTasks ] = useState<Task[]>([])
 
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns])
@@ -82,9 +84,18 @@ function KanbanBoard() {
 
       return
     }
+
+    if (event.active.data.current?.type === "Task") {
+      setActiveTask(event.active.data.current.task)
+
+      return
+    }
   }
 
   function onDragEnd (event: DragEndEvent) {
+    setActiveColumn(null)
+    setActiveTask(null)
+
     const { active, over } = event
 
     if (!over) {
@@ -106,6 +117,53 @@ function KanbanBoard() {
     })
   }
 
+  function onDragOver(event: DragOverEvent) {
+    const { active, over } = event
+
+    if (!over) {
+      return
+    }
+
+    const activeColumnId = active.id
+    const overColumnId = over.id
+
+    if (activeColumnId === overColumnId) {
+      return
+    }
+
+    const isActiveATask = active.data.current?.type === "Task"
+    const isOverATask = over.data.current?.type === "Task"
+
+    if (!isActiveATask) return
+
+    // Перенос задачей внутри колонки поверх друг друга
+
+    if (isActiveATask && isOverATask) {
+      setTasks(tasks => {
+        const activeIndex = tasks.findIndex(t => t.id === activeColumnId)
+        const overIndex = tasks.findIndex(t => t.id === overColumnId)
+
+        tasks[activeIndex].columnId = tasks[overIndex].columnId
+
+        return arrayMove(tasks, activeIndex, overIndex)
+      })
+    }
+
+    const isOverAColumn = over.data.current?.type === "Column"
+
+    // Перенос задачи в других столбцах
+
+    if (isActiveATask && isOverAColumn) {
+      setTasks(tasks => {
+        const activeIndex = tasks.findIndex(t => t.id === activeColumnId)
+
+        tasks[activeIndex].columnId = overColumnId
+
+        return arrayMove(tasks, activeIndex, activeIndex)
+      })
+    }
+  }
+
   return (
     <div
       className="
@@ -119,7 +177,12 @@ function KanbanBoard() {
         px-[40px]
       "
     >
-      <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+      <DndContext
+        sensors={sensors}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragOver={onDragOver}
+      >
         <div className="m-auto flex gap-4">
           <div className="flex gap-4">
             <SortableContext items={columnsId}>
@@ -180,6 +243,8 @@ function KanbanBoard() {
                   />
                 )
               }
+
+              { activeTask && <TaskCard task={activeTask} deleteTask={deleteTask} updateTask={updateTask}/>}
             </DragOverlay>,
             document.body
           )

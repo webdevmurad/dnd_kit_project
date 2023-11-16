@@ -1,6 +1,8 @@
 import { Id, Task } from "../types.ts";
 import TrashIcon from "../icons/TrashIcon.tsx";
 import { useState } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Props {
   task: Task
@@ -10,15 +12,53 @@ interface Props {
 function TaskCard({ task, deleteTask, updateTask }: Props) {
   const [ mouseIsOver, setMouseIsOver ] = useState(false)
   const [ editMode, setEditMode ] = useState(false)
-  
+
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transition,
+    transform,
+    isDragging
+  } = useSortable({
+    id: task.id,
+    data: {
+      type: "Task",
+      task,
+    },
+    disabled: editMode
+  })
+
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform)
+  }
+
   const toggleEditMode = () => {
     setEditMode((prev) => !prev)
     setMouseIsOver(false)
   }
 
+  if (isDragging) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="bg-mainBackgroundColor p-2.5 h-[100px]
+          min-h-[100px] items-center flex text-left
+          rounded-xl border-2 border-rose-500 cursor-grab relative opacity-50
+        "
+      />
+    )
+  }
+
   if (editMode) {
     return (
       <div
+        ref={setNodeRef}
+        style={style}
+        { ...attributes }
+        { ...listeners }
         className="
           bg-mainBackgroundColor p-2.5 h-[100px]
           min-h-[100px] items-center flex text-left
@@ -48,6 +88,10 @@ function TaskCard({ task, deleteTask, updateTask }: Props) {
 
   return (
     <div
+      ref={setNodeRef}
+      style={style}
+      { ...attributes }
+      { ...listeners }
       onClick={toggleEditMode}
       className="
         bg-mainBackgroundColor p-2.5 h-[100px]
